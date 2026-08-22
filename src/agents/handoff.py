@@ -38,13 +38,15 @@ class TriageNode(BaseNode[None, Settings, HandoffResult]):
 
     async def run(
         self, ctx: GraphRunContext[None, Settings]
-    ) -> "FaqNode | HumanHandoffNode":
+    ) -> "FaqNode | HumanHandoffNode | ComplaintNode":
         result = await create_triage_agent(ctx.deps).run(
             self.question, message_history=self.message_history
         )
         triage = result.output
         if triage.target == "human":
             return HumanHandoffNode(reason=triage.reason)
+        if triage.target == "complaint":
+            return ComplaintNode(reason=triage.reason)
         return FaqNode(question=self.question, usage=result.usage)
 
 
@@ -75,6 +77,21 @@ class HumanHandoffNode(BaseNode[None, Settings, HandoffResult]):
             )
         )
 
+@dataclass
+class ComplaintNode(BaseNode[None, Settings, HandoffResult]):
+    reason: str
+
+    async def run(
+        self, ctx: GraphRunContext[None, Settings]
+    ) -> End[HandoffResult]:
+        return End(
+            HandoffResult(
+                f"Przekazuję zgłoszenie do działu reklamacji ({self.reason}).\n\n"
+                f"{FAQ['helpline contact']}",
+                [],
+            )
+        )
+
 
 def _build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]:
     builder = GraphBuilder(
@@ -92,6 +109,7 @@ def _build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]
         builder.node(TriageNode),
         builder.node(FaqNode),
         builder.node(HumanHandoffNode),
+        builder.node(ComplaintNode),
         builder.edge_from(builder.start_node).to(start),
     )
     return builder.build()

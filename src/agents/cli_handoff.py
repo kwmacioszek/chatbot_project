@@ -18,11 +18,14 @@ from agents.observability import configure_logfire
 
 def main() -> None:
     settings = Settings()
-    if not settings.openai_api_key:
-        sys.exit(
-            "Missing API key. Set OPENAI_API_KEY in the .env file in the working directory\n"
-            "(or set the OPENAI_API_KEY environment variable)."
-        )
+    api_keys = {
+        "openai": ("OPENAI_API_KEY", settings.openai_api_key),
+        "gemini": ("GEMINI_API_KEY", settings.gemini_api_key),
+        "lmstudio": ("LMSTUDIO_API_KEY", settings.lmstudio_api_key),
+    }
+    key_name, api_key = api_keys[settings.provider]
+    if not api_key:
+        sys.exit(f"Missing API key. Set {key_name} in the .env file or environment.")
 
     configure_logfire(settings.logfire_token)
 
