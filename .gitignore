@@ -9,3 +9,5 @@ uv.lock
 *.pyc
 
 sessions.db
+
+*.jsonl

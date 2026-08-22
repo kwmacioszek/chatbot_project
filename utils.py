@@ -1,12 +1,15 @@
 
 from __future__ import annotations
-
+import json
 import time
 from typing import Awaitable, Callable
+from pathlib import Path
+from datetime import datetime, timezone
 
 import logfire
 from fastapi import Request, Response
 
+_QA_LOG_PATH = Path("qa_log.jsonl")
 
 async def log_requests(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -24,3 +27,17 @@ async def log_requests(
         duration_ms=duration_ms,
     )
     return response
+
+
+def log_qa_pair(question: str, answer: str) -> None:
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "question": question,
+        "answer": answer,
+    }
+    try:
+        print('Logging QA pair:', entry)
+        with _QA_LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        logfire.exception("Failed to write qa_log entry")
