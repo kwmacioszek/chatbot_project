@@ -45,3 +45,9 @@ Example Air FAQ agent — wpisz pytanie (Ctrl+C lub 'exit' aby zakończyć)
 Ty: ile kosztuje nadbagaż?
 Agent: Nadbagaż kosztuje 50 PLN za każdy rozpoczęty kilogram...
 ```
+
+Handoff 
+
+```
+uv run faq-agent-handoff
+```

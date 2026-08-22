@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from agents.config import Settings
-from observability import configure_logfire
+from agents.observability import configure_logfire
 from agents.faq.agent import create_agent
 
 
