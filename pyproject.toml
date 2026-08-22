@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faq-agent"
+version = "0.1.0"
+description = "Example Air airline FAQ agent built on Pydantic AI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic-ai-slim[openai]>=2.16.0",
+    "pydantic-settings>=2.14.2",
+    "logfire>=3.0.0",
+    "pydantic-graph>=2.16.0",
+    "fastapi[standard]>=0.115.0",
+]
+
+[project.scripts]
+faq-agent = "agents.cli:main"
+faq-agent-handoff = "agents.cli_handoff:main"
+faq-agent-api = "api:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+py-modules = ["api", "schemas", "storage", "utils"]
