@@ -76,7 +76,7 @@ class HumanHandoffNode(BaseNode[None, Settings, HandoffResult]):
         )
 
 
-def _build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]:
+def build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]:
     builder = GraphBuilder(
         name="handoff_graph",
         input_type=HandoffInput,
@@ -97,15 +97,14 @@ def _build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]
     return builder.build()
 
 
-handoff_graph = _build_handoff_graph()
-
-
 def ask(
     question: str,
     settings: Settings | None = None,
     message_history: list[ModelMessage] | None = None,
 ) -> HandoffResult:
     """Runs the hand-off graph and returns the answer plus updated history."""
+    handoff_graph = build_handoff_graph()
+
     settings = settings or Settings()
     return handoff_graph.run_sync(
         inputs=HandoffInput(question, message_history or []), deps=settings
