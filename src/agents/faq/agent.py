@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openai import OpenAIProvider
+from agents.model_factory import create_model
 
 from agents.faq.tools import search_faq
 from agents.config import Settings
@@ -27,13 +26,6 @@ INSTRUCTIONS = (
 
 
 def create_agent(settings: Settings) -> Agent:
-    """Builds the FAQ agent with the configured model and tools."""
-    agent = Agent(
-        OpenAIChatModel(
-            settings.model_name,
-            provider=OpenAIProvider(api_key=settings.openai_api_key),
-        ),
-        instructions=INSTRUCTIONS,
-    )
+    agent = Agent(create_model(settings), instructions=INSTRUCTIONS)
     agent.tool_plain(search_faq)
     return agent
