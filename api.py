@@ -15,7 +15,8 @@ from agents.faq.agent import create_agent
 from agents.handoff import  build_handoff_graph, HandoffInput
 from agents.observability import configure_logfire
 
-_AUDIO_MEDIA_TYPES = {"audio/wav", "audio/mpeg"}
+_AUDIO_MEDIA_TYPES = {"audio/wav", "audio/vnd.wave", "audio/mpeg"}
+_AUDIO_MEDIA_TYPE_ALIASES = {"audio/vnd.wave": "audio/wav"}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -74,19 +75,27 @@ def end_chat(session_id: str) -> None:
 
 
 @app.post("/ask/audio", response_model=AskResponse)
-async def ask_audio(file: UploadFile = File(...)) -> AskResponse:
+async def ask_audio(background_tasks: BackgroundTasks, file: UploadFile = File(...)) -> AskResponse:
     if file.content_type not in _AUDIO_MEDIA_TYPES:
         raise HTTPException(
             status_code=415,
             detail=f"Unsupported audio type '{file.content_type}'; use audio/wav or audio/mpeg (mp3).",
         )
+    media_type = _AUDIO_MEDIA_TYPE_ALIASES.get(file.content_type, file.content_type)
     audio_bytes = await file.read()
     agent: Agent = app.state.audio_agent
     result = await agent.run(
         [
             "Odpowiedz na pytanie pasażera z nagrania audio.",
-            BinaryContent(data=audio_bytes, media_type=file.content_type),
+            BinaryContent(data=audio_bytes, media_type=media_type),
         ]
+    )
+    background_tasks.add_task(
+        utils.log_audio_request,
+        file.filename,
+        file.content_type,
+        len(audio_bytes),
+        result.output,
     )
     return AskResponse(answer=result.output)
 

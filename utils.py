@@ -10,6 +10,7 @@ import logfire
 from fastapi import Request, Response
 
 _QA_LOG_PATH = Path("qa_log.jsonl")
+_AUDIO_LOG = Path("audio_log.jsonl")
 
 async def log_requests(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -41,3 +42,18 @@ def log_qa_pair(question: str, answer: str) -> None:
             f.write(json.dumps(entry) + "\n")
     except OSError:
         logfire.exception("Failed to write qa_log entry")
+
+
+def log_audio_request(filename, content_type, size, answer):
+   entry = {
+       "timestamp": datetime.now(timezone.utc).isoformat(),
+       "filename": filename or "unknown",
+       "content_type": content_type,
+       "size_bytes": size,
+       "answer": answer,
+   }
+   try:
+       with _AUDIO_LOG.open("a", encoding="utf-8") as f:
+           f.write(json.dumps(entry) + "\n")
+   except OSError:
+       logfire.exception("Audio log failed")
