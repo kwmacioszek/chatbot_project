@@ -12,3 +12,5 @@ uv.lock
 *.db
 
 *.jsonl
+
+*.mp3

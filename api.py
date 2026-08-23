@@ -7,6 +7,9 @@ from typing import AsyncIterator
 from pydantic_ai import BinaryContent
 
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Response, UploadFile
+from fastapi.responses import StreamingResponse
+from openai import AsyncOpenAI
+
 
 import storage
 import utils
@@ -33,6 +36,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.audio_agent = create_agent(
         settings.model_copy(update={"model_name": settings.audio_model_name})
     )
+
+    app.state.openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
+
     yield
 
 
@@ -96,6 +102,27 @@ async def ask_audio(background_tasks: BackgroundTasks, file: UploadFile = File(.
         result.output,
     )
     return AskResponse(answer=result.output)
+
+
+@app.post("/ask/speech")
+async def ask_speech(payload: AskRequest) -> StreamingResponse:
+   agent: Agent = app.state.agent
+   result = await agent.run(payload.question)
+
+   settings: Settings = app.state.settings
+   client: AsyncOpenAI = app.state.openai_client
+
+   async def gen() -> AsyncIterator[bytes]:
+       async with client.audio.speech.with_streaming_response.create(
+           model=settings.tts_model_name,
+           voice=settings.tts_voice,
+           input=result.output,
+       ) as response:
+           async for chunk in response.iter_bytes():
+               yield chunk
+
+   return StreamingResponse(gen(), media_type="audio/mpeg")
+
 
 def main() -> None:
     import uvicorn
