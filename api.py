@@ -57,9 +57,7 @@ async def chat(payload: ChatRequest) -> ChatResponse:
    session_id = payload.session_id or str(uuid.uuid4())
    history = storage.get_session(session_id)
 
-   result = await run_handoff(
-       inputs=HandoffInput(payload.question, history), deps=app.state.settings
-   )
+   result = await run_handoff(payload.question, app.state.settings, history)
    if result.messages:
        storage.save_session(session_id, result.messages)
 
