@@ -61,6 +61,7 @@ def _cache_key(question: str) -> str:
 
 def cache_get(question: str) -> str | None:
     entry = _ask_cache.get(_cache_key(question))
+    print(f"Cache entry for '{_cache_key(question)}': {entry}")
     if entry is None:
         return None
     answer, expires_at = entry

@@ -50,10 +50,18 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 @app.post("/ask", response_model=AskResponse)
-async def ask(payload: AskRequest, background_tasks: BackgroundTasks) -> AskResponse:
+async def ask(payload: AskRequest, background_tasks: BackgroundTasks, response: Response) -> AskResponse:
+   cache_answer = storage.cache_get(payload.question)
+   if cache_answer:
+       response.headers["X-Cache"] = "HIT"
+       return AskResponse(answer=cache_answer)
+   
    agent: Agent = app.state.agent
    result = await agent.run(payload.question)
+   
    background_tasks.add_task(utils.log_qa_pair, payload.question, result.output)
+   storage.cache_set(payload.question, result.output)
+   response.headers["X-Cache"] = "MISS"
 
    return AskResponse(answer=result.output)
 
