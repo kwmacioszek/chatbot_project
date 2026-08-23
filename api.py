@@ -1,13 +1,14 @@
 from __future__ import annotations
 from schemas import AskRequest, AskResponse, ChatRequest, ChatResponse
-import storage
 from agents.faq.agent import Agent
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 
+import storage
+import utils
 from agents.config import Settings
 from agents.faq.agent import create_agent
 from agents.handoff import  build_handoff_graph, HandoffInput
@@ -30,7 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Air FAQ Agent API", lifespan=lifespan)
-
+app.middleware("http")(utils.log_requests)
 
 @app.get("/health")
 def health() -> dict[str, str]:
@@ -38,9 +39,11 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 @app.post("/ask", response_model=AskResponse)
-async def ask(payload: AskRequest) -> AskResponse:
+async def ask(payload: AskRequest, background_tasks: BackgroundTasks) -> AskResponse:
    agent: Agent = app.state.agent
    result = await agent.run(payload.question)
+   background_tasks.add_task(utils.log_qa_pair, payload.question, result.output)
+
    return AskResponse(answer=result.output)
 
 
