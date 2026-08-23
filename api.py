@@ -1,5 +1,5 @@
 from __future__ import annotations
-from schemas import AskRequest, AskResponse, ChatRequest, ChatResponse
+from schemas import AskRequest, AskResponse, ChatRequest, ChatResponse, SpeechRequest
 from agents.faq.agent import Agent
 import uuid
 from contextlib import asynccontextmanager
@@ -105,7 +105,7 @@ async def ask_audio(background_tasks: BackgroundTasks, file: UploadFile = File(.
 
 
 @app.post("/ask/speech")
-async def ask_speech(payload: AskRequest) -> StreamingResponse:
+async def ask_speech(payload: SpeechRequest) -> StreamingResponse:
    agent: Agent = app.state.agent
    result = await agent.run(payload.question)
 
@@ -115,7 +115,7 @@ async def ask_speech(payload: AskRequest) -> StreamingResponse:
    async def gen() -> AsyncIterator[bytes]:
        async with client.audio.speech.with_streaming_response.create(
            model=settings.tts_model_name,
-           voice=settings.tts_voice,
+           voice=payload.voice or settings.tts_voice,
            input=result.output,
        ) as response:
            async for chunk in response.iter_bytes():
