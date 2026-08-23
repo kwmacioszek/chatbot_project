@@ -9,6 +9,6 @@ uv.lock
 
 *.pyc
 
-sessions.db
+*.db
 
 *.jsonl
