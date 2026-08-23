@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from pydantic_ai import Agent
+from pydantic_ai import Agent, ModelRetry, RunContext
+from pydantic_ai.messages import ToolCallPart
 from agents.model_factory import create_model
 import re
 
-from pydantic_ai import Agent, ModelRetry, RunContext
-from pydantic_ai.messages import ToolCallPart
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openai import OpenAIProvider
 
 from agents.faq.tools import search_faq
 from agents.config import Settings

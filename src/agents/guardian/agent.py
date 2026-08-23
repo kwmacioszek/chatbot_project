@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.openai import OpenAIProvider
+# from pydantic_ai.models.openai import OpenAIChatModel
+# from pydantic_ai.providers.openai import OpenAIProvider
+from agents.model_factory import create_guardian_model
 
 from agents.config import Settings
 
@@ -33,11 +34,12 @@ class GuardianVerdict(BaseModel):
 
 def create_guardian_agent(settings: Settings) -> Agent[None, GuardianVerdict]:
     """Builds the guardian agent that screens passenger input before triage."""
-    return Agent(
-        OpenAIChatModel(
-            settings.model_name,
-            provider=OpenAIProvider(api_key=settings.openai_api_key),
-        ),
-        instructions=GUARDIAN_INSTRUCTIONS,
-        output_type=GuardianVerdict,
-    )
+    return Agent(create_guardian_model(settings), instructions=GUARDIAN_INSTRUCTIONS, output_type=GuardianVerdict)
+    # return Agent(
+    #     OpenAIChatModel(
+    #         settings.model_name,
+    #         provider=OpenAIProvider(api_key=settings.openai_api_key),
+    #     ),
+    #     instructions=GUARDIAN_INSTRUCTIONS,
+    #     output_type=GuardianVerdict,
+    # )

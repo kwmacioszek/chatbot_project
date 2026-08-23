@@ -43,3 +43,11 @@ def create_model(settings: Settings):
         return MODEL_FACTORIES[settings.provider](settings)
     except KeyError as exc:
         raise ValueError(f"Nieobsługiwany provider: {settings.provider}") from exc
+
+
+def create_guardian_model(settings: Settings):
+    return OpenAIChatModel(
+        settings.guardian_model_name,
+        provider=OpenAIProvider(api_key=settings.openai_api_key),
+    )
+

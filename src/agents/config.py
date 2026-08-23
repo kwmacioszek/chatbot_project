@@ -26,4 +26,5 @@ class Settings(BaseSettings):
     lmstudio_api_key: str = "lm-studio"  # LMSTUDIO_API_KEY variable
     model_name: str = "gpt-4o-mini"  # MODEL_NAME variable
     audio_model_name: str = "gpt-audio-mini"  # AUDIO_MODEL_NAME variable
+    guardian_model_name: str = "gpt-4.1-nano"
     logfire_token: str = ""  # LOGFIRE_TOKEN variable (optional)
