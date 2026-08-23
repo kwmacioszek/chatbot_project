@@ -11,3 +11,5 @@ uv.lock
 sessions.db
 
 *.jsonl
+
+*.mp3

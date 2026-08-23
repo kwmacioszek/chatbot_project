@@ -21,3 +21,5 @@ class Settings(BaseSettings):
     model_name: str = "gpt-4o-mini"  # MODEL_NAME variable
     audio_model_name: str = "gpt-audio-mini"  # AUDIO_MODEL_NAME variable
     logfire_token: str = ""  # LOGFIRE_TOKEN variable (optional)
+    tts_model_name: str = "gpt-4o-mini-tts"  # TTS_MODEL_NAME variable
+    tts_voice: str = "alloy"  # TTS_VOICE variable
