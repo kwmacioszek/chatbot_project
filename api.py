@@ -12,7 +12,7 @@ import storage
 import utils
 from agents.config import Settings
 from agents.faq.agent import create_agent
-from agents.handoff import  build_handoff_graph, HandoffInput
+from agents.handoff import  build_handoff_graph, HandoffInput, run_handoff
 from agents.observability import configure_logfire
 
 _AUDIO_MEDIA_TYPES = {"audio/wav", "audio/vnd.wave", "audio/mpeg"}
@@ -58,9 +58,7 @@ async def chat(payload: ChatRequest) -> ChatResponse:
    session_id = payload.session_id or str(uuid.uuid4())
    history = storage.get_session(session_id)
 
-   result = await app.state.handoff_graph.run(
-       inputs=HandoffInput(payload.question, history), deps=app.state.settings
-   )
+   result = await run_handoff(payload.question, app.state.settings, history)
    if result.messages:
        storage.save_session(session_id, result.messages)
 

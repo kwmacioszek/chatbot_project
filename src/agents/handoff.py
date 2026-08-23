@@ -1,5 +1,6 @@
 
 from __future__ import annotations
+import asyncio
 
 from dataclasses import dataclass, field
 
@@ -10,6 +11,7 @@ from pydantic_graph import BaseNode, End, Graph, GraphBuilder, GraphRunContext
 from agents.faq.agent import create_agent
 from agents.faq.knowledge_base import FAQ
 from agents.triage.agent import create_triage_agent
+from agents.guardian.agent import create_guardian_agent
 from agents.config import Settings
 
 
@@ -114,6 +116,32 @@ def build_handoff_graph() -> Graph[None, Settings, HandoffResult, HandoffInput]:
     )
     return builder.build()
 
+async def run_handoff(
+    question: str,
+    settings: Settings,
+    message_history: list[ModelMessage] | None = None,
+) -> HandoffResult:
+    """Runs the guardian check and the hand-off graph concurrently.
+
+    Neither needs the other's result to start, so both LLM calls go out
+    at the same time (`asyncio.gather`) instead of the guardian blocking
+    the graph — the graph's result is simply discarded if the guardian
+    blocks the question.
+    """
+    handoff_graph = build_handoff_graph()
+    message_history = message_history or []
+    guardian_result, graph_result = await asyncio.gather(
+        create_guardian_agent(settings).run(question, message_history=message_history),
+        handoff_graph.run(
+            inputs=HandoffInput(question, message_history), deps=settings
+        ),
+    )
+    if guardian_result.output.triggered:
+        return HandoffResult(
+            f"Nie mogę pomóc z tym zapytaniem ({guardian_result.output.reason}).",
+            [],
+        )
+    return graph_result
 
 def ask(
     question: str,
