@@ -17,3 +17,6 @@ class ChatResponse(BaseModel):
 
 class SpeechRequest(AskRequest):
       voice: TTSVoice | None = None
+
+class CacheClearResponse(BaseModel):
+    cleared: int

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from schemas import AskRequest, AskResponse, ChatRequest, ChatResponse, SpeechRequest
+from schemas import AskRequest, AskResponse, ChatRequest, ChatResponse, SpeechRequest, CacheClearResponse
 from agents.faq.agent import Agent
 import uuid
 from contextlib import asynccontextmanager
@@ -130,6 +130,11 @@ async def ask_speech(payload: SpeechRequest) -> StreamingResponse:
                yield chunk
 
    return StreamingResponse(gen(), media_type="audio/mpeg")
+
+
+@app.delete("/cache", response_model=CacheClearResponse)
+def clear_cache() -> CacheClearResponse:
+    return CacheClearResponse(cleared=storage.cache_clear())
 
 
 def main() -> None:

@@ -76,3 +76,8 @@ def cache_set(question: str, answer: str) -> None:
         answer,
         time.monotonic() + _ASK_CACHE_TTL_SECONDS,
     )
+
+def cache_clear() -> int:
+    cleared = len(_ask_cache)
+    _ask_cache.clear()
+    return cleared
