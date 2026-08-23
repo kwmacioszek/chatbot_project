@@ -4,8 +4,9 @@ from agents.faq.agent import Agent
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+from pydantic_ai import BinaryContent
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Response, UploadFile
 
 import storage
 import utils
@@ -14,6 +15,7 @@ from agents.faq.agent import create_agent
 from agents.handoff import  build_handoff_graph, HandoffInput
 from agents.observability import configure_logfire
 
+_AUDIO_MEDIA_TYPES = {"audio/wav", "audio/mpeg"}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -27,6 +29,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.settings = settings
     app.state.agent = create_agent(settings)
     app.state.handoff_graph = build_handoff_graph()
+    app.state.audio_agent = create_agent(
+        settings.model_copy(update={"model_name": settings.audio_model_name})
+    )
     yield
 
 
@@ -68,6 +73,22 @@ def end_chat(session_id: str) -> None:
        raise HTTPException(status_code=404, detail="Unknown session_id")
 
 
+@app.post("/ask/audio", response_model=AskResponse)
+async def ask_audio(file: UploadFile = File(...)) -> AskResponse:
+    if file.content_type not in _AUDIO_MEDIA_TYPES:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported audio type '{file.content_type}'; use audio/wav or audio/mpeg (mp3).",
+        )
+    audio_bytes = await file.read()
+    agent: Agent = app.state.audio_agent
+    result = await agent.run(
+        [
+            "Odpowiedz na pytanie pasażera z nagrania audio.",
+            BinaryContent(data=audio_bytes, media_type=file.content_type),
+        ]
+    )
+    return AskResponse(answer=result.output)
 
 def main() -> None:
     import uvicorn

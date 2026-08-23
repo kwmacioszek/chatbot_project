@@ -19,4 +19,5 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""  # OPENAI_API_KEY variable
     model_name: str = "gpt-4o-mini"  # MODEL_NAME variable
+    audio_model_name: str = "gpt-audio-mini"  # AUDIO_MODEL_NAME variable
     logfire_token: str = ""  # LOGFIRE_TOKEN variable (optional)
